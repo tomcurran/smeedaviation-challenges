@@ -83,3 +83,10 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+
+# Mac files
+.DS_Store
+
+# Android Studio/IDEA
+*.iml
+.idea
