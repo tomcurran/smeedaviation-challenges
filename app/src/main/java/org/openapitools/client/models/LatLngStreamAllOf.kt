@@ -21,6 +21,6 @@ import com.squareup.moshi.Json
 data class LatLngStreamAllOf (
     /* The sequence of lat/long values for this stream */
     @Json(name = "data")
-    val data: kotlin.Array<kotlin.Array>? = null
+    val data: kotlin.Array<kotlin.Array<Any>>? = null
 )
 

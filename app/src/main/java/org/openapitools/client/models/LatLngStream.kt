@@ -35,7 +35,7 @@ data class LatLngStream (
     val seriesType: LatLngStream.SeriesType? = null,
     /* The sequence of lat/long values for this stream */
     @Json(name = "data")
-    val data: kotlin.Array<kotlin.Array>? = null
+    val data: kotlin.Array<kotlin.Array<Any>>? = null
 ) {
 
     /**
