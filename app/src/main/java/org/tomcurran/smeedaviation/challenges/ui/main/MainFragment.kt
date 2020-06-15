@@ -13,7 +13,6 @@ import com.google.android.material.snackbar.Snackbar
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.MainFragmentBinding
 
-
 class MainFragment : Fragment() {
 
     companion object {
@@ -48,14 +47,6 @@ class MainFragment : Fragment() {
                 Snackbar.make(binding.root, "Strava not installed", Snackbar.LENGTH_SHORT).show()
             }
         }
-
-
-//        viewModel.buttonClick.observe(this, Observer {
-//            if (it == true) {
-//                Snackbar.make(binding.root, "test", Snackbar.LENGTH_SHORT).show()
-//                viewModel.doneButtonClick()
-//            }
-//        })
 
         return binding.root
     }

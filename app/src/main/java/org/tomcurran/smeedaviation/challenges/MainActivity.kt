@@ -41,6 +41,5 @@ class MainActivity : AppCompatActivity() {
     private fun snackMessage(message: String) {
         val content = findViewById<View>(android.R.id.content)
         Snackbar.make(content, message, Snackbar.LENGTH_SHORT).show()
-
     }
 }
