@@ -5,10 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.openapitools.client.apis.ActivitiesApi
 import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ActivityType
@@ -47,17 +44,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun load() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                val activitiesNearJune = getActivitySummariesNearJune()
-                val detailedRunsInJune = activitiesNearJune
+                val juneRunIds = getActivitySummariesNearJune()
                     .filter { it.type == ActivityType.run }
                     .filter { it.startDateLocal?.month == Month.JUNE }
-                    .map { async { _activitiesApi.getActivityById(it.id!!, false) } }
-                    .awaitAll()
-//                    .filter { it.bestEfforts?.any { effort -> effort.name == "1 mile" } ?: false }
+                    .mapNotNull { it.id }
 
-                val fastestOneMileRunInJune = detailedRunsInJune.minBy {
+                val fastestOneMileRunInJune = getActivitiesDetails(juneRunIds).minBy {
                     it.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
                         ?: Int.MAX_VALUE
                 }
@@ -72,37 +66,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         oneMileDuration.toMinutes(),
                         oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
                     )
-                    viewModelScope.launch {
-                        _fastestOneMileRun.value = oneMileTimeString
-                    }
+                    _fastestOneMileRun.value = oneMileTimeString
                 } else {
-                    viewModelScope.launch {
-                        _fastestOneMileRun.value = "not yet completed"
-                    }
+                    _fastestOneMileRun.value = "not yet completed"
                 }
             } catch (e: Exception) {
-                viewModelScope.launch {
-                    _fastestOneMileRun.value = "error"
-                }
+                _fastestOneMileRun.value = "error"
             }
         }
     }
 
-    private fun getActivitySummariesNearJune(): List<SummaryActivity> {
-        val instantNearEndOfMay = OffsetDateTime.parse("2020-05-29T00:00:00+00:00").toInstant()
-        val instantNearStartOfJuly = OffsetDateTime.parse("2020-07-02T00:00:00+00:00").toInstant()
-        val activitySummariesNearJune = mutableListOf<SummaryActivity>()
-        var page = 0
-        do {
-            page++
-            val activitySummaries = _activitiesApi.getLoggedInAthleteActivities(
-                instantNearStartOfJuly.epochSecond.toInt(),
-                instantNearEndOfMay.epochSecond.toInt(),
-                page,
-                STRAVA_PAGE_SIZE_MAX
-            )
-            activitySummariesNearJune.addAll(activitySummaries)
-        } while (activitySummaries.isNotEmpty())
-        return activitySummariesNearJune
-    }
+    private suspend fun getActivitySummariesNearJune() =
+        withContext(Dispatchers.IO) {
+            val instantNearEndOfMay = OffsetDateTime.parse("2020-05-29T00:00:00+00:00").toInstant()
+            val instantNearStartOfJuly =
+                OffsetDateTime.parse("2020-07-02T00:00:00+00:00").toInstant()
+            val activitySummariesNearJune = mutableListOf<SummaryActivity>()
+            var page = 0
+            do {
+                page++
+                val activitySummaries = _activitiesApi.getLoggedInAthleteActivities(
+                    instantNearStartOfJuly.epochSecond.toInt(),
+                    instantNearEndOfMay.epochSecond.toInt(),
+                    page,
+                    STRAVA_PAGE_SIZE_MAX
+                )
+                activitySummariesNearJune.addAll(activitySummaries)
+            } while (activitySummaries.isNotEmpty())
+            activitySummariesNearJune
+        }
+
+    private suspend fun getActivitiesDetails(activityIds: List<Long>) =
+        withContext(Dispatchers.IO) {
+            activityIds
+                .map { async { _activitiesApi.getActivityById(it, false) } }
+                .awaitAll()
+        }
 }
