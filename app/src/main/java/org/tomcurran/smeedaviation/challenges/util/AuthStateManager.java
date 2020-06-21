@@ -113,6 +113,7 @@ public class AuthStateManager {
         return replace(current);
     }
 
+    @SuppressWarnings("unused")
     @AnyThread
     @NonNull
     public AuthState updateAfterRegistration(

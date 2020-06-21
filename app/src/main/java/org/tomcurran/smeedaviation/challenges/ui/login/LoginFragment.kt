@@ -15,8 +15,6 @@ import org.tomcurran.smeedaviation.challenges.util.EventObserver
 class LoginFragment : Fragment() {
 
     companion object {
-        fun newInstance() = LoginFragment()
-
         private const val LOGIN_REQUEST_CODE = 0
     }
 
