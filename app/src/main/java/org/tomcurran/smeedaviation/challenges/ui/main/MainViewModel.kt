@@ -17,6 +17,7 @@ import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ActivityType
 import org.openapitools.client.models.SummaryActivity
 import org.tomcurran.smeedaviation.challenges.R
+import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
 import java.lang.Exception
 import java.time.*

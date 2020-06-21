@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package org.tomcurran.smeedaviation.challenges.ui.main;
+package org.tomcurran.smeedaviation.challenges.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
