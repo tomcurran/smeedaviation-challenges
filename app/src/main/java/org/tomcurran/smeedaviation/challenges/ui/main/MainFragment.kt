@@ -5,16 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.MainFragmentBinding
 import org.tomcurran.smeedaviation.challenges.util.EventObserver
 
 class MainFragment : Fragment() {
-    private val viewModel: MainViewModel by lazy {
-        ViewModelProviders.of(this).get(MainViewModel::class.java)
-    }
+
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
