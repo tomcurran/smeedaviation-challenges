@@ -2,4 +2,5 @@
     <string name="app_name">Challenges</string>
     <string name="buttonLabel">test</string>
     <string name="fastest_running_mile_during_june">Fastest running mile during June</string>
+    <string name="login">Login</string>
 </resources>

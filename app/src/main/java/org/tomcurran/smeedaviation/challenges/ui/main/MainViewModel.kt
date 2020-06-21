@@ -1,8 +1,9 @@
 package org.tomcurran.smeedaviation.challenges.ui.main
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -12,26 +13,37 @@ import org.openapitools.client.apis.ActivitiesApi
 import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ActivityType
 import org.openapitools.client.models.SummaryActivity
-import java.lang.Exception
-import java.time.*
+import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
+import org.tomcurran.smeedaviation.challenges.util.Event
+import java.time.Duration
+import java.time.Month
+import java.time.OffsetDateTime
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val STRAVA_PAGE_SIZE_MAX = 200
     }
 
+    private val _authStateManager : AuthStateManager
     private val _activitiesApi : ActivitiesApi
 
     private val _fastestOneMileRun = MutableLiveData<String>()
-    val fastestOneMileRun: LiveData<String>
-        get() = _fastestOneMileRun
+    val fastestOneMileRun: LiveData<String> = _fastestOneMileRun
+
+    private val _navigateToLogin = MutableLiveData<Event<Unit>>()
+    val navigateToLogin: LiveData<Event<Unit>> = _navigateToLogin
 
     init {
         _fastestOneMileRun.value = "loading..."
-        ApiClient.accessToken = "406cf72f7e225de1b3e63e2e70866db2c78882bd"
+        _authStateManager = AuthStateManager.getInstance(getApplication())
+        ApiClient.accessToken = _authStateManager.current.accessToken
         _activitiesApi = ActivitiesApi()
-        load()
+        if (!_authStateManager.current.isAuthorized) {
+            _navigateToLogin.value = Event(Unit)
+        } else {
+            load()
+        }
     }
 
     private fun load() {
