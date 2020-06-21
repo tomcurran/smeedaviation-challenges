@@ -1,18 +1,16 @@
 package org.tomcurran.smeedaviation.challenges
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import org.tomcurran.smeedaviation.challenges.ui.main.MainFragment
+import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
+import org.tomcurran.smeedaviation.challenges.databinding.MainActivityBinding
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var binding: MainActivityBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.main_activity)
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                    .replace(R.id.container, MainFragment.newInstance())
-                    .commitNow()
-        }
+        binding = DataBindingUtil.setContentView(this, R.layout.main_activity)
     }
 }

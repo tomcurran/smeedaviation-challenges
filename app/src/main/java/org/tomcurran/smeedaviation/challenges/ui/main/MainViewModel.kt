@@ -14,6 +14,7 @@ import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.models.ActivityType
 import org.openapitools.client.models.SummaryActivity
 import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
+import org.tomcurran.smeedaviation.challenges.util.Event
 import java.time.Duration
 import java.time.Month
 import java.time.OffsetDateTime
@@ -28,15 +29,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _activitiesApi : ActivitiesApi
 
     private val _fastestOneMileRun = MutableLiveData<String>()
-    val fastestOneMileRun: LiveData<String>
-        get() = _fastestOneMileRun
+    val fastestOneMileRun: LiveData<String> = _fastestOneMileRun
+
+    private val _navigateToLogin = MutableLiveData<Event<Unit>>()
+    val navigateToLogin: LiveData<Event<Unit>> = _navigateToLogin
 
     init {
         _fastestOneMileRun.value = "loading..."
         _authStateManager = AuthStateManager.getInstance(getApplication())
         ApiClient.accessToken = _authStateManager.current.accessToken
         _activitiesApi = ActivitiesApi()
-        load()
+        if (!_authStateManager.current.isAuthorized) {
+            _navigateToLogin.value = Event(Unit)
+        } else {
+            load()
+        }
     }
 
     private fun load() {

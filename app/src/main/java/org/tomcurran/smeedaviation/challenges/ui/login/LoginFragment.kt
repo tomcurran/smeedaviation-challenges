@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.findNavController
+import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.LoginFragmentBinding
 import org.tomcurran.smeedaviation.challenges.util.EventObserver
 
@@ -34,6 +36,10 @@ class LoginFragment : Fragment() {
         binding.loginButton.setOnClickListener {
             viewModel.auth()
         }
+
+        viewModel.navigateToMain.observe(viewLifecycleOwner, EventObserver {
+            binding.root.findNavController().navigate(R.id.action_loginFragment_to_mainFragment)
+        })
 
         return binding.root
     }

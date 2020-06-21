@@ -34,6 +34,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     val launchIntent: LiveData<Event<Intent>>
         get() = _launchIntent
 
+    private val _navigateToMain = MutableLiveData<Event<Unit>>()
+    val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
+
     init {
     }
 
@@ -73,6 +76,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         _authStateManager.current.clientAuthentication
                     ) { tokenResponse, tokenEx ->
                         _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
+                        _navigateToMain.value = Event(Unit)
                     }
                 }
             }
