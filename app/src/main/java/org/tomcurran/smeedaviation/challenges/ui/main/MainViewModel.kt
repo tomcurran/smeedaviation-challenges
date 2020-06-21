@@ -25,8 +25,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private const val STRAVA_PAGE_SIZE_MAX = 200
     }
 
-    private val _authStateManager : AuthStateManager
-    private val _activitiesApi : ActivitiesApi
+    private val _authStateManager: AuthStateManager
+    private val _activitiesApi: ActivitiesApi
 
     private val _fastestOneMileRun = MutableLiveData<String>()
     val fastestOneMileRun: LiveData<String> = _fastestOneMileRun
@@ -49,7 +49,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun load() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                var activitiesNearJune = getActivitySummariesNearJune()
+                val activitiesNearJune = getActivitySummariesNearJune()
                 val detailedRunsInJune = activitiesNearJune
                     .filter { it.type == ActivityType.run }
                     .filter { it.startDateLocal?.month == Month.JUNE }
@@ -58,10 +58,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 //                    .filter { it.bestEfforts?.any { effort -> effort.name == "1 mile" } ?: false }
 
                 val fastestOneMileRunInJune = detailedRunsInJune.minBy {
-                    it.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime ?: Int.MAX_VALUE
+                    it.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
+                        ?: Int.MAX_VALUE
                 }
 
-                var oneMileSeconds = fastestOneMileRunInJune?.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
+                val oneMileSeconds =
+                    fastestOneMileRunInJune?.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
 
                 if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
                     val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())

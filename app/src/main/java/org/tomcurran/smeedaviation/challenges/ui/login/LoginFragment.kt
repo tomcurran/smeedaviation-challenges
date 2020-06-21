@@ -17,25 +17,25 @@ class LoginFragment : Fragment() {
     companion object {
         fun newInstance() = LoginFragment()
 
-        private const val AUTH_REQUEST_CODE = 0
+        private const val LOGIN_REQUEST_CODE = 0
     }
 
     private val viewModel: LoginViewModel by lazy {
         ViewModelProviders.of(this).get(LoginViewModel::class.java)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val binding = LoginFragmentBinding.inflate(inflater, container, false)
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        viewModel.launchIntent.observe(viewLifecycleOwner, EventObserver { intent ->
-            startActivityForResult(intent, AUTH_REQUEST_CODE)
+        viewModel.launchLoginIntent.observe(viewLifecycleOwner, EventObserver { intent ->
+            startActivityForResult(intent, LOGIN_REQUEST_CODE)
         })
-
-        binding.loginButton.setOnClickListener {
-            viewModel.auth()
-        }
 
         viewModel.navigateToMain.observe(viewLifecycleOwner, EventObserver {
             binding.root.findNavController().navigate(R.id.action_loginFragment_to_mainFragment)
@@ -47,8 +47,8 @@ class LoginFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == AUTH_REQUEST_CODE) {
-            viewModel.processAuth(resultCode, data)
+        if (requestCode == LOGIN_REQUEST_CODE) {
+            viewModel.processLoginResponse(resultCode, data)
         }
     }
 }

@@ -28,21 +28,21 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private val _authStateManager = AuthStateManager.getInstance(getApplication())
+    private var _authService: AuthorizationService? = null
 
-    private var _authService : AuthorizationService? = null
-
-    private val _launchIntent = MutableLiveData<Event<Intent>>()
-    val launchIntent: LiveData<Event<Intent>>
-        get() = _launchIntent
+    private val _launchLoginIntent = MutableLiveData<Event<Intent>>()
+    val launchLoginIntent: LiveData<Event<Intent>> = _launchLoginIntent
 
     private val _navigateToMain = MutableLiveData<Event<Unit>>()
     val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
 
-    init {
-    }
-
-    fun auth() {
-        val authState = AuthState(AuthorizationServiceConfiguration(AUTH_ENDPOINT.toUri(), TOKEN_ENDPOINT.toUri()))
+    fun login() {
+        val authState = AuthState(
+            AuthorizationServiceConfiguration(
+                AUTH_ENDPOINT.toUri(),
+                TOKEN_ENDPOINT.toUri()
+            )
+        )
         _authStateManager.replace(authState)
 
         val authRequest = AuthorizationRequest.Builder(
@@ -61,19 +61,21 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             AuthorizationManagementActivity.createStartForResultIntent(
                 getApplication(),
                 authRequest,
-                Intent(Intent.ACTION_VIEW, authRequest.toUri()));
+                Intent(Intent.ACTION_VIEW, authRequest.toUri())
+            )
         } else {
             _authService!!.getAuthorizationRequestIntent(
                 authRequest,
                 _authService!!.createCustomTabsIntentBuilder(authRequest.toUri())
                     .setToolbarColor(ContextCompat.getColor(getApplication(), R.color.colorPrimary))
-                    .build())
+                    .build()
+            )
         }
 
-        _launchIntent.value = Event(authRequestIntent)
+        _launchLoginIntent.value = Event(authRequestIntent)
     }
 
-    fun processAuth(resultCode: Int, data: Intent?) {
+    fun processLoginResponse(resultCode: Int, data: Intent?) {
         if (resultCode == Activity.RESULT_OK && data != null) {
             val response = AuthorizationResponse.fromIntent(data)
             val ex = AuthorizationException.fromIntent(data)

@@ -88,5 +88,4 @@ lint/tmp/
 .DS_Store
 
 # Android Studio/IDEA
-*.iml
 .idea
