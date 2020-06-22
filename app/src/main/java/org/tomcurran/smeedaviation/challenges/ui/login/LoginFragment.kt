@@ -14,10 +14,6 @@ import org.tomcurran.smeedaviation.challenges.util.EventObserver
 
 class LoginFragment : Fragment() {
 
-    companion object {
-        private const val LOGIN_REQUEST_CODE = 0
-    }
-
     private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreateView(
@@ -29,8 +25,8 @@ class LoginFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        viewModel.launchLoginIntent.observe(viewLifecycleOwner, EventObserver { intent ->
-            startActivityForResult(intent, LOGIN_REQUEST_CODE)
+        viewModel.startActivityForResult.observe(viewLifecycleOwner, EventObserver {
+            startActivityForResult(it.intent, it.requestCode)
         })
 
         viewModel.navigateToMain.observe(viewLifecycleOwner, EventObserver {
@@ -42,9 +38,6 @@ class LoginFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == LOGIN_REQUEST_CODE) {
-            viewModel.processLoginResponse(resultCode, data)
-        }
+        viewModel.onActivityResult(requestCode, resultCode, data)
     }
 }

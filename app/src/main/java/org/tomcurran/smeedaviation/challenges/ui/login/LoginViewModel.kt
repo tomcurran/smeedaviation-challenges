@@ -25,13 +25,20 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         private const val AUTH_ENDPOINT = "https://www.strava.com/oauth/mobile/authorize"
         private const val TOKEN_ENDPOINT = "https://www.strava.com/api/v3/oauth/token"
         private const val REDIRECT_URI = "challenges.smeedaviation.tomcurran.org://auth"
+
+        private const val AUTH_REQUEST_CODE = 0
     }
+
+    data class StartActivityForResult(
+        val intent: Intent,
+        val requestCode: Int
+    )
 
     private val _authStateManager = AuthStateManager.getInstance(getApplication())
     private var _authService: AuthorizationService? = null
 
-    private val _launchLoginIntent = MutableLiveData<Event<Intent>>()
-    val launchLoginIntent: LiveData<Event<Intent>> = _launchLoginIntent
+    private val _startActivityForResult = MutableLiveData<Event<StartActivityForResult>>()
+    val startActivityForResult: LiveData<Event<StartActivityForResult>> = _startActivityForResult
 
     private val _navigateToMain = MutableLiveData<Event<Unit>>()
     val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
@@ -67,28 +74,36 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             _authService!!.getAuthorizationRequestIntent(
                 authRequest,
                 _authService!!.createCustomTabsIntentBuilder(authRequest.toUri())
-                    .setToolbarColor(ContextCompat.getColor(getApplication(), R.color.colorPrimary))
+                    .setToolbarColor(
+                        ContextCompat.getColor(
+                            getApplication(),
+                            R.color.colorPrimary
+                        )
+                    )
                     .build()
             )
         }
 
-        _launchLoginIntent.value = Event(authRequestIntent)
+        _startActivityForResult.value =
+            Event(StartActivityForResult(authRequestIntent, AUTH_REQUEST_CODE))
     }
 
-    fun processLoginResponse(resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            val response = AuthorizationResponse.fromIntent(data)
-            val ex = AuthorizationException.fromIntent(data)
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == AUTH_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                val response = AuthorizationResponse.fromIntent(data)
+                val ex = AuthorizationException.fromIntent(data)
 
-            if (response != null || ex != null) {
-                _authStateManager.updateAfterAuthorization(response, ex)
-                if (response != null) {
-                    _authService!!.performTokenRequest(
-                        response.createTokenExchangeRequest(mapOf("client_secret" to CLIENT_SECRET)),
-                        _authStateManager.current.clientAuthentication
-                    ) { tokenResponse, tokenEx ->
-                        _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
-                        _navigateToMain.value = Event(Unit)
+                if (response != null || ex != null) {
+                    _authStateManager.updateAfterAuthorization(response, ex)
+                    if (response != null) {
+                        _authService!!.performTokenRequest(
+                            response.createTokenExchangeRequest(mapOf("client_secret" to CLIENT_SECRET)),
+                            _authStateManager.current.clientAuthentication
+                        ) { tokenResponse, tokenEx ->
+                            _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
+                            _navigateToMain.value = Event(Unit)
+                        }
                     }
                 }
             }
