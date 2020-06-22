@@ -9,6 +9,10 @@ import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 import net.openid.appauth.connectivity.DefaultConnectionBuilder
 import org.tomcurran.smeedaviation.challenges.R
@@ -44,65 +48,71 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
 
     fun login() {
-        val authState = AuthState(
-            AuthorizationServiceConfiguration(
-                AUTH_ENDPOINT.toUri(),
-                TOKEN_ENDPOINT.toUri()
+        viewModelScope.launch(Dispatchers.Default) {
+            val authState = AuthState(
+                AuthorizationServiceConfiguration(
+                    AUTH_ENDPOINT.toUri(),
+                    TOKEN_ENDPOINT.toUri()
+                )
             )
-        )
-        _authStateManager.replace(authState)
+            _authStateManager.replace(authState)
 
-        val authRequest = AuthorizationRequest.Builder(
-            _authStateManager.current.authorizationServiceConfiguration!!,
-            CLIENT_ID,
-            ResponseTypeValues.CODE,
-            REDIRECT_URI.toUri()
-        ).setScope(SCOPE).build()
+            val authRequest = AuthorizationRequest.Builder(
+                _authStateManager.current.authorizationServiceConfiguration!!,
+                CLIENT_ID,
+                ResponseTypeValues.CODE,
+                REDIRECT_URI.toUri()
+            ).setScope(SCOPE).build()
 
-        val appAuthConfiguration = AppAuthConfiguration.Builder()
-            .setConnectionBuilder(DefaultConnectionBuilder.INSTANCE)
-            .build()
-        _authService = AuthorizationService(getApplication(), appAuthConfiguration)
+            val appAuthConfiguration = AppAuthConfiguration.Builder()
+                .setConnectionBuilder(DefaultConnectionBuilder.INSTANCE)
+                .build()
+            _authService = AuthorizationService(getApplication(), appAuthConfiguration)
 
-        val authRequestIntent = if (isPackageInstalled("com.strava")) {
-            AuthorizationManagementActivity.createStartForResultIntent(
-                getApplication(),
-                authRequest,
-                Intent(Intent.ACTION_VIEW, authRequest.toUri())
-            )
-        } else {
-            _authService!!.getAuthorizationRequestIntent(
-                authRequest,
-                _authService!!.createCustomTabsIntentBuilder(authRequest.toUri())
-                    .setToolbarColor(
-                        ContextCompat.getColor(
-                            getApplication(),
-                            R.color.colorPrimary
+            val authRequestIntent = if (isPackageInstalled("com.strava")) {
+                AuthorizationManagementActivity.createStartForResultIntent(
+                    getApplication(),
+                    authRequest,
+                    Intent(Intent.ACTION_VIEW, authRequest.toUri())
+                )
+            } else {
+                _authService!!.getAuthorizationRequestIntent(
+                    authRequest,
+                    _authService!!.createCustomTabsIntentBuilder(authRequest.toUri())
+                        .setToolbarColor(
+                            ContextCompat.getColor(
+                                getApplication(),
+                                R.color.colorPrimary
+                            )
                         )
-                    )
-                    .build()
-            )
-        }
+                        .build()
+                )
+            }
 
-        _startActivityForResult.value =
-            Event(StartActivityForResult(authRequestIntent, AUTH_REQUEST_CODE))
+            withContext(Dispatchers.Main) {
+                _startActivityForResult.value =
+                    Event(StartActivityForResult(authRequestIntent, AUTH_REQUEST_CODE))
+            }
+        }
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == AUTH_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                val response = AuthorizationResponse.fromIntent(data)
-                val ex = AuthorizationException.fromIntent(data)
+        viewModelScope.launch (Dispatchers.IO) {
+            if (requestCode == AUTH_REQUEST_CODE) {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    val response = AuthorizationResponse.fromIntent(data)
+                    val ex = AuthorizationException.fromIntent(data)
 
-                if (response != null || ex != null) {
-                    _authStateManager.updateAfterAuthorization(response, ex)
-                    if (response != null) {
-                        _authService!!.performTokenRequest(
-                            response.createTokenExchangeRequest(mapOf("client_secret" to CLIENT_SECRET)),
-                            _authStateManager.current.clientAuthentication
-                        ) { tokenResponse, tokenEx ->
-                            _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
-                            _navigateToMain.value = Event(Unit)
+                    if (response != null || ex != null) {
+                        _authStateManager.updateAfterAuthorization(response, ex)
+                        if (response != null) {
+                            _authService!!.performTokenRequest(
+                                response.createTokenExchangeRequest(mapOf("client_secret" to CLIENT_SECRET)),
+                                _authStateManager.current.clientAuthentication
+                            ) { tokenResponse, tokenEx ->
+                                _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
+                                _navigateToMain.value = Event(Unit)
+                            }
                         }
                     }
                 }
