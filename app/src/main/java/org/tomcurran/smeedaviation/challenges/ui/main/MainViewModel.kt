@@ -51,17 +51,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun load() {
         viewModelScope.launch {
             try {
-                val juneActivities =  getActivitySummariesNearJune()
+                val juneActivities = getActivitySummariesNearJune()
                     .filter { it.startDateLocal?.month == Month.JUNE }
 
                 try {
-                    _fastestOneMileRun.value = getBestEffortDuration(juneActivities, ActivityType.run, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
+                    _fastestOneMileRun.value = getBestEffortDuration(
+                        juneActivities,
+                        ActivityType.run,
+                        STRAVA_ONE_MILE_BEST_EFFORT_NAME
+                    )
                 } catch (e: Exception) {
                     _fastestOneMileRun.value = "error"
                 }
 
                 try {
-                    _fastestOneMileRide.value = getBestEffortDuration(juneActivities, ActivityType.ride, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
+                    _fastestOneMileRide.value = getBestEffortDuration(
+                        juneActivities,
+                        ActivityType.ride,
+                        STRAVA_ONE_MILE_BEST_EFFORT_NAME
+                    )
                 } catch (e: Exception) {
                     _fastestOneMileRide.value = "error"
                 }
@@ -72,7 +80,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun getBestEffortDuration(activitySummaries: List<SummaryActivity>, activityType: ActivityType, effortName: String): String {
+    private suspend fun getBestEffortDuration(
+        activitySummaries: List<SummaryActivity>,
+        activityType: ActivityType,
+        effortName: String
+    ): String {
         val activityIds = activitySummaries
             .filter { it.type == activityType }
             .mapNotNull { it.id }
