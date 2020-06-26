@@ -28,11 +28,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _fastestOneMileRun = MutableLiveData<String>()
     val fastestOneMileRun: LiveData<String> = _fastestOneMileRun
 
+    private val _fastestOneMileRide = MutableLiveData<String>()
+    val fastestOneMileRide: LiveData<String> = _fastestOneMileRide
+
     private val _navigateToLogin = MutableLiveData<Event<Unit>>()
     val navigateToLogin: LiveData<Event<Unit>> = _navigateToLogin
 
     init {
         _fastestOneMileRun.value = "loading..."
+        _fastestOneMileRide.value = "loading..."
         _authStateManager = AuthStateManager.getInstance(getApplication())
         ApiClient.accessToken = _authStateManager.current.accessToken
         _activitiesApi = ActivitiesApi()
@@ -46,33 +50,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun load() {
         viewModelScope.launch {
             try {
-                val juneRunIds = getActivitySummariesNearJune()
-                    .filter { it.type == ActivityType.run }
+                val juneActivities =  getActivitySummariesNearJune()
                     .filter { it.startDateLocal?.month == Month.JUNE }
-                    .mapNotNull { it.id }
 
-                val fastestOneMileRunInJune = getActivitiesDetails(juneRunIds).minBy {
-                    it.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
-                        ?: Int.MAX_VALUE
+                try {
+                    _fastestOneMileRun.value = getBestEffortDuration(juneActivities, ActivityType.run, "1 mile")
+                } catch (e: Exception) {
+                    _fastestOneMileRun.value = "error"
                 }
 
-                val oneMileSeconds =
-                    fastestOneMileRunInJune?.bestEfforts?.firstOrNull { effort -> effort.name == "1 mile" }?.movingTime
-
-                if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
-                    val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
-                    val oneMileTimeString = String.format(
-                        "%d min, %d sec",
-                        oneMileDuration.toMinutes(),
-                        oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
-                    )
-                    _fastestOneMileRun.value = oneMileTimeString
-                } else {
-                    _fastestOneMileRun.value = "not yet completed"
+                try {
+                    _fastestOneMileRide.value = getBestEffortDuration(juneActivities, ActivityType.ride, "1 mile")
+                } catch (e: Exception) {
+                    _fastestOneMileRide.value = "error"
                 }
             } catch (e: Exception) {
                 _fastestOneMileRun.value = "error"
+                _fastestOneMileRide.value = "error"
             }
+        }
+    }
+
+    private suspend fun getBestEffortDuration(activitySummaries: List<SummaryActivity>, activityType: ActivityType, effortName: String): String {
+        val activityIds = activitySummaries
+            .filter { it.type == activityType }
+            .mapNotNull { it.id }
+
+        val fastestOneMileInJune = getActivitiesDetails(activityIds).minBy {
+            it.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
+                ?: Int.MAX_VALUE
+        }
+
+        val oneMileSeconds =
+            fastestOneMileInJune?.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
+
+        return if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
+            val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
+            String.format(
+                "%d min, %d sec",
+                oneMileDuration.toMinutes(),
+                oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
+            )
+        } else {
+            "not yet completed"
         }
     }
 
