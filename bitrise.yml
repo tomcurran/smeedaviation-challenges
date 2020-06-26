@@ -24,7 +24,7 @@ workflows:
     - file-downloader@1:
         inputs:
         - destination: "$BITRISE_SOURCE_DIR/app/shared.properties"
-        - source: BITRISEIO_SHARED_PROPERTIES_URL
+        - source: "$BITRISEIO_SHARED_PROPERTIES_URL"
         title: Download Shared Properties
     - install-missing-android-tools@2:
         inputs:
