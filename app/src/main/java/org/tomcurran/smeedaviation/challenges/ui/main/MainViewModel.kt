@@ -20,6 +20,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val STRAVA_PAGE_SIZE_MAX = 200
+        private const val STRAVA_ONE_MILE_BEST_EFFORT_NAME = "1 mile"
     }
 
     private val _authStateManager: AuthStateManager
@@ -54,13 +55,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     .filter { it.startDateLocal?.month == Month.JUNE }
 
                 try {
-                    _fastestOneMileRun.value = getBestEffortDuration(juneActivities, ActivityType.run, "1 mile")
+                    _fastestOneMileRun.value = getBestEffortDuration(juneActivities, ActivityType.run, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                 } catch (e: Exception) {
                     _fastestOneMileRun.value = "error"
                 }
 
                 try {
-                    _fastestOneMileRide.value = getBestEffortDuration(juneActivities, ActivityType.ride, "1 mile")
+                    _fastestOneMileRide.value = getBestEffortDuration(juneActivities, ActivityType.ride, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                 } catch (e: Exception) {
                     _fastestOneMileRide.value = "error"
                 }
