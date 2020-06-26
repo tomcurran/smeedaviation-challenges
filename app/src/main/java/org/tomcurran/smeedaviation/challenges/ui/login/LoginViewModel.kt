@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 import net.openid.appauth.connectivity.DefaultConnectionBuilder
+import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_API_CLIENT_SECRET
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
@@ -22,8 +23,6 @@ import org.tomcurran.smeedaviation.challenges.util.Event
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
-        private const val CLIENT_SECRET = "test"
-
         private const val CLIENT_ID = "49167"
         private const val SCOPE = "activity:read_all"
         private const val AUTH_ENDPOINT = "https://www.strava.com/oauth/mobile/authorize"
@@ -107,7 +106,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         _authStateManager.updateAfterAuthorization(response, ex)
                         if (response != null) {
                             _authService!!.performTokenRequest(
-                                response.createTokenExchangeRequest(mapOf("client_secret" to CLIENT_SECRET)),
+                                response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET)),
                                 _authStateManager.current.clientAuthentication
                             ) { tokenResponse, tokenEx ->
                                 _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)

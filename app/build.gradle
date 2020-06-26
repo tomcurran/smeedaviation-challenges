@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 
 def props = new Properties()
 props.load(new FileInputStream(file("release.properties")))
+props.load(new FileInputStream(file("shared.properties")))
 
 android {
     compileSdkVersion 29
@@ -15,6 +16,8 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "STRAVA_API_CLIENT_SECRET", "\"${props.stravaApiClientSecret}\""
 
         manifestPlaceholders = [
                 'appAuthRedirectScheme': 'challenges.smeedaviation.tomcurran.org'
