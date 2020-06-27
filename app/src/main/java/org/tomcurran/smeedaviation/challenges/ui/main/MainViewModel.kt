@@ -6,12 +6,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import net.openid.appauth.AuthState
 import org.openapitools.client.apis.ActivitiesApi
 import org.openapitools.client.infrastructure.ApiClient
+import org.openapitools.client.infrastructure.ClientException
 import org.openapitools.client.models.ActivityType
 import org.openapitools.client.models.SummaryActivity
 import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
+import java.net.HttpURLConnection
 import java.time.Duration
 import java.time.Month
 import java.time.OffsetDateTime
@@ -73,11 +76,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (e: Exception) {
                     _fastestOneMileRide.value = "error"
                 }
+            } catch (clientException: ClientException) {
+                if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    _navigateToLogin.value = Event(Unit)
+                } else {
+                    unhandledError();
+                }
             } catch (e: Exception) {
-                _fastestOneMileRun.value = "error"
-                _fastestOneMileRide.value = "error"
+                unhandledError();
             }
         }
+    }
+
+    private fun unhandledError() {
+        _fastestOneMileRun.value = "error"
+        _fastestOneMileRide.value = "error"
     }
 
     private suspend fun getBestEffortDuration(
