@@ -11,6 +11,7 @@ import androidx.navigation.findNavController
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.LoginFragmentBinding
 import org.tomcurran.smeedaviation.challenges.util.EventObserver
+import java.lang.Exception
 
 class LoginFragment : Fragment() {
 
@@ -26,7 +27,11 @@ class LoginFragment : Fragment() {
         binding.viewModel = viewModel
 
         viewModel.startActivityForResult.observe(viewLifecycleOwner, EventObserver {
-            startActivityForResult(it.intent, it.requestCode)
+            try {
+                startActivityForResult(it.intent, it.requestCode)
+            } catch (e: Exception) {
+                // intentionally left blank - onActivityResult will handle the failure
+            }
         })
 
         viewModel.navigateToMain.observe(viewLifecycleOwner, EventObserver {
