@@ -19,6 +19,8 @@ import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_API_CLIENT_SECR
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -107,31 +109,32 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         viewModelScope.launch(Dispatchers.IO) {
             if (requestCode == AUTH_REQUEST_CODE) {
-                try {
-                    if (resultCode == Activity.RESULT_OK && data != null) {
-                        val response = AuthorizationResponse.fromIntent(data)
-                        val ex = AuthorizationException.fromIntent(data)
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    val response = AuthorizationResponse.fromIntent(data)
+                    val ex = AuthorizationException.fromIntent(data)
 
-                        if (response != null || ex != null) {
-                            _authStateManager.updateAfterAuthorization(response, ex)
-                            if (response != null) {
+                    if (response != null || ex != null) {
+                        _authStateManager.updateAfterAuthorization(response, ex)
+                        if (response != null) {
+                            val tokenRequest =
+                                response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET))
+                            val (tokenResponse, tokenEx) = suspendCoroutine<Pair<TokenResponse?, AuthorizationException?>> { continuation ->
                                 _authService!!.performTokenRequest(
-                                    response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET)),
-                                    _authStateManager.current.clientAuthentication
+                                    tokenRequest, _authStateManager.current.clientAuthentication
                                 ) { tokenResponse, tokenEx ->
-                                    _authStateManager.updateAfterTokenResponse(
-                                        tokenResponse,
-                                        tokenEx
-                                    )
-                                    _navigateToMain.value = Event(Unit)
+                                    continuation?.resume(Pair(tokenResponse, tokenEx))
                                 }
+                            }
+                            _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
+                            withContext(Dispatchers.Main) {
+                                _navigateToMain.value = Event(Unit)
                             }
                         }
                     }
-                } finally {
-                    withContext(Dispatchers.Main) {
-                        _loggingIn.value = false
-                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    _loggingIn.value = false
                 }
             }
         }
