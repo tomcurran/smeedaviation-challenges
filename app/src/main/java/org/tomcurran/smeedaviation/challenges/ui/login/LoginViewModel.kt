@@ -46,7 +46,15 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _navigateToMain = MutableLiveData<Event<Unit>>()
     val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
 
+    private val _loggingIn = MutableLiveData<Boolean>()
+    val loggingIn: LiveData<Boolean> = _loggingIn
+
+    init {
+        _loggingIn.value = false
+    }
+
     fun login() {
+        _loggingIn.value = true
         viewModelScope.launch(Dispatchers.Default) {
             val authState = AuthState(
                 AuthorizationServiceConfiguration(
@@ -96,23 +104,32 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        viewModelScope.launch (Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             if (requestCode == AUTH_REQUEST_CODE) {
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    val response = AuthorizationResponse.fromIntent(data)
-                    val ex = AuthorizationException.fromIntent(data)
+                try {
+                    if (resultCode == Activity.RESULT_OK && data != null) {
+                        val response = AuthorizationResponse.fromIntent(data)
+                        val ex = AuthorizationException.fromIntent(data)
 
-                    if (response != null || ex != null) {
-                        _authStateManager.updateAfterAuthorization(response, ex)
-                        if (response != null) {
-                            _authService!!.performTokenRequest(
-                                response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET)),
-                                _authStateManager.current.clientAuthentication
-                            ) { tokenResponse, tokenEx ->
-                                _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
-                                _navigateToMain.value = Event(Unit)
+                        if (response != null || ex != null) {
+                            _authStateManager.updateAfterAuthorization(response, ex)
+                            if (response != null) {
+                                _authService!!.performTokenRequest(
+                                    response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET)),
+                                    _authStateManager.current.clientAuthentication
+                                ) { tokenResponse, tokenEx ->
+                                    _authStateManager.updateAfterTokenResponse(
+                                        tokenResponse,
+                                        tokenEx
+                                    )
+                                    _navigateToMain.value = Event(Unit)
+                                }
                             }
                         }
+                    }
+                } finally {
+                    withContext(Dispatchers.Main) {
+                        _loggingIn.value = false
                     }
                 }
             }
