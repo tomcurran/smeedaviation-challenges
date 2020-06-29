@@ -41,7 +41,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     )
 
     private val _authStateManager = AuthStateManager.getInstance(getApplication())
-    private var _authService: AuthorizationService? = null
+    private var _authService = AuthorizationService(getApplication())
 
     private val _startActivityForResult = MutableLiveData<Event<StartActivityForResult>>()
     val startActivityForResult: LiveData<Event<StartActivityForResult>> = _startActivityForResult
@@ -74,11 +74,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 REDIRECT_URI.toUri()
             ).setScope(SCOPE).build()
 
-            val appAuthConfiguration = AppAuthConfiguration.Builder()
-                .setConnectionBuilder(DefaultConnectionBuilder.INSTANCE)
-                .build()
-            _authService = AuthorizationService(getApplication(), appAuthConfiguration)
-
             val authRequestIntent = if (isPackageInstalled(STRAVA_PACKAGE_NAME)) {
                 AuthorizationManagementActivity.createStartForResultIntent(
                     getApplication(),
@@ -86,9 +81,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     Intent(Intent.ACTION_VIEW, authRequest.toUri())
                 )
             } else {
-                _authService!!.getAuthorizationRequestIntent(
+                _authService.getAuthorizationRequestIntent(
                     authRequest,
-                    _authService!!.createCustomTabsIntentBuilder(authRequest.toUri())
+                    _authService.createCustomTabsIntentBuilder(authRequest.toUri())
                         .setToolbarColor(
                             ContextCompat.getColor(
                                 getApplication(),
@@ -119,7 +114,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                             val tokenRequest =
                                 response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET))
                             val (tokenResponse, tokenEx) = suspendCoroutine<Pair<TokenResponse?, AuthorizationException?>> { continuation ->
-                                _authService!!.performTokenRequest(
+                                _authService.performTokenRequest(
                                     tokenRequest, _authStateManager.current.clientAuthentication
                                 ) { tokenResponse, tokenEx ->
                                     continuation?.resume(Pair(tokenResponse, tokenEx))
