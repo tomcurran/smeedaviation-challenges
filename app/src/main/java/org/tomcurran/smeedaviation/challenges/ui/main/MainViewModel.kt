@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
-import net.openid.appauth.AuthState
+import okhttp3.OkHttpClient
 import org.openapitools.client.apis.ActivitiesApi
 import org.openapitools.client.infrastructure.ApiClient
 import org.openapitools.client.infrastructure.ClientException
@@ -42,6 +42,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _fastestOneMileRun.value = "loading..."
         _fastestOneMileRide.value = "loading..."
         _authStateManager = AuthStateManager.getInstance(getApplication())
+        ApiClient.builder = OkHttpClient.Builder().authenticator(TokenAuthenticator(application))
         ApiClient.accessToken = _authStateManager.current.accessToken
         _activitiesApi = ActivitiesApi()
         if (!_authStateManager.current.isAuthorized) {
