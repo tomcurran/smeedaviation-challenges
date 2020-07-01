@@ -43,7 +43,7 @@ open class ApiClient(val baseUrl: String) {
         }
 
         @JvmStatic
-        val builder: OkHttpClient.Builder = OkHttpClient.Builder()
+        var builder: OkHttpClient.Builder = OkHttpClient.Builder()
     }
 
     /**
