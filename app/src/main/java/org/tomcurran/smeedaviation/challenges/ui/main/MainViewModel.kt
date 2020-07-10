@@ -62,25 +62,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val juneActivities = activities.filter { it.startDateLocal?.month == Month.JUNE }
                 val julyActivities = activities.filter { it.startDateLocal?.month == Month.JULY }
 
-                try {
+                val fastestOneMileRunJuneDeferred = async {
                     _fastestOneMileRunJune.value = getBestEffortDuration(
                         juneActivities,
                         ActivityType.run,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
-                } catch (e: Exception) {
-                    _fastestOneMileRunJune.value = "error"
                 }
 
-                try {
+                val fastestOneMileRunJulyDeferred = async {
                     _fastestOneMileRunJuly.value = getBestEffortDuration(
                         julyActivities,
                         ActivityType.run,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
-                } catch (e: Exception) {
-                    _fastestOneMileRunJuly.value = "error"
                 }
+
+                awaitAll(fastestOneMileRunJuneDeferred, fastestOneMileRunJulyDeferred)
             } catch (clientException: ClientException) {
                 if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                     _navigateToLogin.value = Event(Unit)
@@ -103,27 +101,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         activityType: ActivityType,
         effortName: String
     ): String {
-        val activityIds = activitySummaries
-            .filter { it.type == activityType }
-            .mapNotNull { it.id }
+        try {
+            val activityIds = activitySummaries
+                .filter { it.type == activityType }
+                .mapNotNull { it.id }
 
-        val fastestOneMileInJune = getActivitiesDetails(activityIds).minBy {
-            it.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
-                ?: Int.MAX_VALUE
-        }
+            val fastestOneMileInJune = getActivitiesDetails(activityIds).minBy {
+                it.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
+                    ?: Int.MAX_VALUE
+            }
 
-        val oneMileSeconds =
-            fastestOneMileInJune?.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
+            val oneMileSeconds =
+                fastestOneMileInJune?.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
 
-        return if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
-            val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
-            String.format(
-                "%d min, %d sec",
-                oneMileDuration.toMinutes(),
-                oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
-            )
-        } else {
-            "not yet completed"
+            return if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
+                val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
+                String.format(
+                    "%d min, %d sec",
+                    oneMileDuration.toMinutes(),
+                    oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
+                )
+            } else {
+                "not yet completed"
+            }
+        } catch (e: Exception) {
+            return "error"
         }
     }
 
