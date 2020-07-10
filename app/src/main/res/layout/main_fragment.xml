@@ -16,52 +16,52 @@
         tools:context=".ui.main.MainFragment">
 
         <TextView
-            android:id="@+id/main_run_label"
+            android:id="@+id/main_run_june_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="@string/fastest_running_mile_during_june"
-            app:layout_constraintBottom_toTopOf="@+id/main_run_message"
+            app:layout_constraintBottom_toTopOf="@+id/main_run_june_time"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
-            android:id="@+id/main_run_message"
+            android:id="@+id/main_run_june_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="@{viewModel.fastestOneMileRun}"
-            app:layout_constraintBottom_toTopOf="@id/main_ride_label"
+            android:text="@{viewModel.fastestOneMileRunJune}"
+            app:layout_constraintBottom_toTopOf="@id/main_run_july_label"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/main_run_label"
+            app:layout_constraintTop_toBottomOf="@id/main_run_june_label"
             tools:text="10 min, 01 sec" />
 
         <TextView
-            android:id="@+id/main_ride_label"
+            android:id="@+id/main_run_july_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:padding="8dp"
-            android:text="@string/fastest_riding_mile_during_june"
-            app:layout_constraintBottom_toTopOf="@+id/main_ride_message"
+            android:text="@string/fastest_running_mile_during_july"
+            app:layout_constraintBottom_toTopOf="@+id/main_run_july_time"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/main_run_message"
+            app:layout_constraintTop_toBottomOf="@id/main_run_june_time"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
-            android:id="@+id/main_ride_message"
+            android:id="@+id/main_run_july_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="@{viewModel.fastestOneMileRide}"
+            android:text="@{viewModel.fastestOneMileRunJuly}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/main_ride_label"
+            app:layout_constraintTop_toBottomOf="@id/main_run_july_label"
             tools:text="10 min, 01 sec" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,6 +16,7 @@ import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
 import java.net.HttpURLConnection
 import java.time.Duration
+import java.time.Instant
 import java.time.Month
 import java.time.OffsetDateTime
 
@@ -29,18 +30,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _authStateManager: AuthStateManager
     private val _activitiesApi: ActivitiesApi
 
-    private val _fastestOneMileRun = MutableLiveData<String>()
-    val fastestOneMileRun: LiveData<String> = _fastestOneMileRun
+    private val _fastestOneMileRunJune = MutableLiveData<String>()
+    val fastestOneMileRunJune: LiveData<String> = _fastestOneMileRunJune
 
-    private val _fastestOneMileRide = MutableLiveData<String>()
-    val fastestOneMileRide: LiveData<String> = _fastestOneMileRide
+    private val _fastestOneMileRunJuly = MutableLiveData<String>()
+    val fastestOneMileRunJuly: LiveData<String> = _fastestOneMileRunJuly
 
     private val _navigateToLogin = MutableLiveData<Event<Unit>>()
     val navigateToLogin: LiveData<Event<Unit>> = _navigateToLogin
 
     init {
-        _fastestOneMileRun.value = "loading..."
-        _fastestOneMileRide.value = "loading..."
+        _fastestOneMileRunJune.value = "loading..."
+        _fastestOneMileRunJuly.value = "loading..."
         _authStateManager = AuthStateManager.getInstance(getApplication())
         ApiClient.builder = OkHttpClient.Builder().authenticator(TokenAuthenticator(application))
         ApiClient.accessToken = _authStateManager.current.accessToken
@@ -55,27 +56,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun load() {
         viewModelScope.launch {
             try {
-                val juneActivities = getActivitySummariesNearJune()
-                    .filter { it.startDateLocal?.month == Month.JUNE }
+                val instantNearEndOfMay = OffsetDateTime.parse("2020-05-29T00:00:00+00:00").toInstant()
+                val instantNearStartOfAugust = OffsetDateTime.parse("2020-08-02T00:00:00+00:00").toInstant()
+                val activities = getActivitySummaries(instantNearEndOfMay, instantNearStartOfAugust)
+                val juneActivities = activities.filter { it.startDateLocal?.month == Month.JUNE }
+                val julyActivities = activities.filter { it.startDateLocal?.month == Month.JULY }
 
                 try {
-                    _fastestOneMileRun.value = getBestEffortDuration(
+                    _fastestOneMileRunJune.value = getBestEffortDuration(
                         juneActivities,
                         ActivityType.run,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
                 } catch (e: Exception) {
-                    _fastestOneMileRun.value = "error"
+                    _fastestOneMileRunJune.value = "error"
                 }
 
                 try {
-                    _fastestOneMileRide.value = getBestEffortDuration(
-                        juneActivities,
-                        ActivityType.ride,
+                    _fastestOneMileRunJuly.value = getBestEffortDuration(
+                        julyActivities,
+                        ActivityType.run,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
                 } catch (e: Exception) {
-                    _fastestOneMileRide.value = "error"
+                    _fastestOneMileRunJuly.value = "error"
                 }
             } catch (clientException: ClientException) {
                 if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
@@ -90,8 +94,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun unhandledError() {
-        _fastestOneMileRun.value = "error"
-        _fastestOneMileRide.value = "error"
+        _fastestOneMileRunJune.value = "error"
+        _fastestOneMileRunJuly.value = "error"
     }
 
     private suspend fun getBestEffortDuration(
@@ -123,24 +127,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun getActivitySummariesNearJune() =
+    private suspend fun getActivitySummaries(after: Instant, before: Instant) =
         withContext(Dispatchers.IO) {
-            val instantNearEndOfMay = OffsetDateTime.parse("2020-05-29T00:00:00+00:00").toInstant()
-            val instantNearStartOfJuly =
-                OffsetDateTime.parse("2020-07-02T00:00:00+00:00").toInstant()
-            val activitySummariesNearJune = mutableListOf<SummaryActivity>()
+            val activitySummaries = mutableListOf<SummaryActivity>()
             var page = 0
             do {
                 page++
-                val activitySummaries = _activitiesApi.getLoggedInAthleteActivities(
-                    instantNearStartOfJuly.epochSecond.toInt(),
-                    instantNearEndOfMay.epochSecond.toInt(),
+                val activitySummaryPage = _activitiesApi.getLoggedInAthleteActivities(
+                    before.epochSecond.toInt(),
+                    after.epochSecond.toInt(),
                     page,
                     STRAVA_PAGE_SIZE_MAX
                 )
-                activitySummariesNearJune.addAll(activitySummaries)
-            } while (activitySummaries.isNotEmpty())
-            activitySummariesNearJune
+                activitySummaries.addAll(activitySummaryPage)
+            } while (activitySummaryPage.isNotEmpty())
+            activitySummaries
         }
 
     private suspend fun getActivitiesDetails(activityIds: List<Long>) =
