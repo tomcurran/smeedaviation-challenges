@@ -27,25 +27,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private const val STRAVA_ONE_MILE_BEST_EFFORT_NAME = "1 mile"
     }
 
-    private val _authStateManager: AuthStateManager
-    private val _activitiesApi: ActivitiesApi
+    private val _authStateManager = AuthStateManager.getInstance(getApplication())
+    private val _activitiesApi = ActivitiesApi()
 
-    private val _fastestOneMileRunJune = MutableLiveData<String>()
+    private val _fastestOneMileRunJune = MutableLiveData<String>("loading...")
     val fastestOneMileRunJune: LiveData<String> = _fastestOneMileRunJune
 
-    private val _fastestOneMileRunJuly = MutableLiveData<String>()
+    private val _fastestOneMileRunJuly = MutableLiveData<String>("loading...")
     val fastestOneMileRunJuly: LiveData<String> = _fastestOneMileRunJuly
 
     private val _navigateToLogin = MutableLiveData<Event<Unit>>()
     val navigateToLogin: LiveData<Event<Unit>> = _navigateToLogin
 
     init {
-        _fastestOneMileRunJune.value = "loading..."
-        _fastestOneMileRunJuly.value = "loading..."
-        _authStateManager = AuthStateManager.getInstance(getApplication())
         ApiClient.builder = OkHttpClient.Builder().authenticator(TokenAuthenticator(application))
         ApiClient.accessToken = _authStateManager.current.accessToken
-        _activitiesApi = ActivitiesApi()
         if (!_authStateManager.current.isAuthorized) {
             _navigateToLogin.value = Event(Unit)
         } else {
