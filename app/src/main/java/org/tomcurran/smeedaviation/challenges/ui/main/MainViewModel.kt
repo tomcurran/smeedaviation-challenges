@@ -54,22 +54,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val instantNearEndOfMay = OffsetDateTime.parse("2020-05-29T00:00:00+00:00").toInstant()
                 val instantNearStartOfAugust = OffsetDateTime.parse("2020-08-02T00:00:00+00:00").toInstant()
-                val activities = getActivitySummaries(instantNearEndOfMay, instantNearStartOfAugust)
-                val juneActivities = activities.filter { it.startDateLocal?.month == Month.JUNE }
-                val julyActivities = activities.filter { it.startDateLocal?.month == Month.JULY }
+                val activitiesNearJuneJuly = getActivitySummaries(instantNearEndOfMay, instantNearStartOfAugust)
 
                 val fastestOneMileRunJuneDeferred = async {
                     _fastestOneMileRunJune.value = getBestEffortDuration(
-                        juneActivities,
-                        ActivityType.run,
+                        activitiesNearJuneJuly,
+                        Month.JUNE,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
                 }
 
                 val fastestOneMileRunJulyDeferred = async {
                     _fastestOneMileRunJuly.value = getBestEffortDuration(
-                        julyActivities,
-                        ActivityType.run,
+                        activitiesNearJuneJuly,
+                        Month.JULY,
                         STRAVA_ONE_MILE_BEST_EFFORT_NAME
                     )
                 }
@@ -94,11 +92,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun getBestEffortDuration(
         activitySummaries: List<SummaryActivity>,
-        activityType: ActivityType,
-        effortName: String
+        month: Month,
+        effortName: String,
+        activityType: ActivityType = ActivityType.run
     ): String {
         try {
             val activityIds = activitySummaries
+                .filter { it.startDateLocal?.month == month }
                 .filter { it.type == activityType }
                 .mapNotNull { it.id }
 
