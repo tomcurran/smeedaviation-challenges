@@ -56,60 +56,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val instantNearStartOfAugust = OffsetDateTime.parse("2020-08-02T00:00:00+00:00").toInstant()
                 val activitiesNearJuneJuly = getActivitySummaries(instantNearEndOfMay, instantNearStartOfAugust)
 
-                supervisorScope {
-                    val fastestOneMileRunJuneDeferred = async {
-                        try {
-                            _fastestOneMileRunJune.value = getBestEffortDuration(
-                                activitiesNearJuneJuly,
-                                Month.JUNE,
-                                STRAVA_ONE_MILE_BEST_EFFORT_NAME
-                            )
-                        } catch (clientException: ClientException) {
-                            if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                _navigateToLogin.value = Event(Unit)
-                            } else {
-                                _fastestOneMileRunJune.value = "error"
-                            }
-                        } catch (e: Exception) {
+                viewModelScope.launch {
+                    try {
+                        _fastestOneMileRunJune.value = getBestEffortDuration(
+                            activitiesNearJuneJuly,
+                            Month.JUNE,
+                            STRAVA_ONE_MILE_BEST_EFFORT_NAME
+                        )
+                    } catch (clientException: ClientException) {
+                        if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                            _navigateToLogin.value = Event(Unit)
+                        } else {
                             _fastestOneMileRunJune.value = "error"
                         }
+                    } catch (e: Exception) {
+                        _fastestOneMileRunJune.value = "error"
                     }
+                }
 
-                    val fastestOneMileRunJulyDeferred = async {
-                        try {
-                            _fastestOneMileRunJuly.value = getBestEffortDuration(
-                                activitiesNearJuneJuly,
-                                Month.JULY,
-                                STRAVA_ONE_MILE_BEST_EFFORT_NAME
-                            )
-                        } catch (clientException: ClientException) {
-                            if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                _navigateToLogin.value = Event(Unit)
-                            } else {
-                                _fastestOneMileRunJuly.value = "error"
-                            }
-                        } catch (e: Exception) {
+                viewModelScope.launch {
+                    try {
+                        _fastestOneMileRunJuly.value = getBestEffortDuration(
+                            activitiesNearJuneJuly,
+                            Month.JULY,
+                            STRAVA_ONE_MILE_BEST_EFFORT_NAME
+                        )
+                    } catch (clientException: ClientException) {
+                        if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                            _navigateToLogin.value = Event(Unit)
+                        } else {
                             _fastestOneMileRunJuly.value = "error"
                         }
+                    } catch (e: Exception) {
+                        _fastestOneMileRunJuly.value = "error"
                     }
-
-                    awaitAll(fastestOneMileRunJuneDeferred, fastestOneMileRunJulyDeferred)
                 }
+
             } catch (clientException: ClientException) {
                 if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                     _navigateToLogin.value = Event(Unit)
                 } else {
-                    unhandledError();
+                    _fastestOneMileRunJune.value = "error"
+                    _fastestOneMileRunJuly.value = "error"
                 }
             } catch (e: Exception) {
-                unhandledError();
+                _fastestOneMileRunJune.value = "error"
+                _fastestOneMileRunJuly.value = "error"
             }
         }
-    }
-
-    private fun unhandledError() {
-        _fastestOneMileRunJune.value = "error"
-        _fastestOneMileRunJuly.value = "error"
     }
 
     private suspend fun getBestEffortDuration(
