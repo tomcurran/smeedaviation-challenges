@@ -58,11 +58,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 viewModelScope.launch {
                     try {
-                        _fastestOneMileRunJune.value = getBestEffortDuration(
-                            activitiesNearJuneJuly,
-                            Month.JUNE,
-                            STRAVA_ONE_MILE_BEST_EFFORT_NAME
-                        )
+                        val fastestOneMileRunJuneDuration =
+                            getBestEffortDuration(activitiesNearJuneJuly, Month.JUNE, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
+                        _fastestOneMileRunJune.value =
+                            if (fastestOneMileRunJuneDuration == null || fastestOneMileRunJuneDuration == Duration.ZERO) {
+                                "not yet completed"
+                            } else {
+                                String.format(
+                                    "%d min, %d sec",
+                                    fastestOneMileRunJuneDuration.toMinutes(),
+                                    fastestOneMileRunJuneDuration.minusMinutes(fastestOneMileRunJuneDuration.toMinutes()).seconds
+                                )
+                            }
                     } catch (clientException: ClientException) {
                         if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                             _navigateToLogin.value = Event(Unit)
@@ -76,11 +83,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 viewModelScope.launch {
                     try {
-                        _fastestOneMileRunJuly.value = getBestEffortDuration(
-                            activitiesNearJuneJuly,
-                            Month.JULY,
-                            STRAVA_ONE_MILE_BEST_EFFORT_NAME
-                        )
+                        val fastestOneMileRunJulyDuration =
+                            getBestEffortDuration(activitiesNearJuneJuly, Month.JULY, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
+                        _fastestOneMileRunJuly.value =
+                            if (fastestOneMileRunJulyDuration == null || fastestOneMileRunJulyDuration == Duration.ZERO) {
+                                "not yet completed"
+                            } else {
+                                String.format(
+                                    "%d min, %d sec",
+                                    fastestOneMileRunJulyDuration.toMinutes(),
+                                    fastestOneMileRunJulyDuration.minusMinutes(fastestOneMileRunJulyDuration.toMinutes()).seconds
+                                )
+                            }
                     } catch (clientException: ClientException) {
                         if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
                             _navigateToLogin.value = Event(Unit)
@@ -111,7 +125,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         month: Month,
         effortName: String,
         activityType: ActivityType = ActivityType.run
-    ): String {
+    ): Duration? {
         val activityIds = activitySummaries
             .filter { it.startDateLocal?.month == month }
             .filter { it.type == activityType }
@@ -127,13 +141,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         return if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
             val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
-            String.format(
-                "%d min, %d sec",
-                oneMileDuration.toMinutes(),
-                oneMileDuration.minusMinutes(oneMileDuration.toMinutes()).seconds
-            )
+            oneMileDuration
         } else {
-            "not yet completed"
+            null
         }
     }
 
