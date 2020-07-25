@@ -61,7 +61,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val fastestOneMileRunJuneDuration =
                             getBestEffortDuration(activitiesNearJuneJuly, Month.JUNE, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                         _fastestOneMileRunJune.value =
-                            if (fastestOneMileRunJuneDuration == null || fastestOneMileRunJuneDuration == Duration.ZERO) {
+                            if (fastestOneMileRunJuneDuration == Duration.ZERO) {
                                 "not yet completed"
                             } else {
                                 String.format(
@@ -86,7 +86,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val fastestOneMileRunJulyDuration =
                             getBestEffortDuration(activitiesNearJuneJuly, Month.JULY, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                         _fastestOneMileRunJuly.value =
-                            if (fastestOneMileRunJulyDuration == null || fastestOneMileRunJulyDuration == Duration.ZERO) {
+                            if (fastestOneMileRunJulyDuration == Duration.ZERO) {
                                 "not yet completed"
                             } else {
                                 String.format(
@@ -125,7 +125,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         month: Month,
         effortName: String,
         activityType: ActivityType = ActivityType.run
-    ): Duration? {
+    ): Duration {
         val activityIds = activitySummaries
             .filter { it.startDateLocal?.month == month }
             .filter { it.type == activityType }
@@ -140,10 +140,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             fastestOneMileInJune?.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
 
         return if (oneMileSeconds != null && oneMileSeconds != Int.MAX_VALUE) {
-            val oneMileDuration = Duration.ofSeconds(oneMileSeconds.toLong())
-            oneMileDuration
+            Duration.ofSeconds(oneMileSeconds.toLong())
         } else {
-            null
+            Duration.ZERO
         }
     }
 
