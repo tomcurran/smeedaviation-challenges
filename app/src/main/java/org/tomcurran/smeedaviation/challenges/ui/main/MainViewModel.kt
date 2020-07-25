@@ -61,14 +61,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val fastestOneMileRunJuneDuration =
                             getBestEffortDuration(activitiesNearJuneJuly, Month.JUNE, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                         _fastestOneMileRunJune.value =
-                            if (fastestOneMileRunJuneDuration == Duration.ZERO) {
-                                "not yet completed"
-                            } else {
+                            if (fastestOneMileRunJuneDuration > Duration.ZERO) {
                                 String.format(
                                     "%d min, %d sec",
                                     fastestOneMileRunJuneDuration.toMinutes(),
                                     fastestOneMileRunJuneDuration.minusMinutes(fastestOneMileRunJuneDuration.toMinutes()).seconds
                                 )
+                            } else {
+                                "not yet completed"
                             }
                     } catch (clientException: ClientException) {
                         if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
@@ -86,14 +86,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val fastestOneMileRunJulyDuration =
                             getBestEffortDuration(activitiesNearJuneJuly, Month.JULY, STRAVA_ONE_MILE_BEST_EFFORT_NAME)
                         _fastestOneMileRunJuly.value =
-                            if (fastestOneMileRunJulyDuration == Duration.ZERO) {
-                                "not yet completed"
-                            } else {
+                            if (fastestOneMileRunJulyDuration > Duration.ZERO) {
                                 String.format(
                                     "%d min, %d sec",
                                     fastestOneMileRunJulyDuration.toMinutes(),
                                     fastestOneMileRunJulyDuration.minusMinutes(fastestOneMileRunJulyDuration.toMinutes()).seconds
                                 )
+                            } else {
+                                "not yet completed"
                             }
                     } catch (clientException: ClientException) {
                         if (clientException.statusCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
