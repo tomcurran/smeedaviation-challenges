@@ -3,36 +3,36 @@ format_version: '8'
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 project_type: android
 trigger_map:
-- push_branch: "*"
-  workflow: primary
+  - push_branch: "*"
+    workflow: primary
 workflows:
   primary:
     steps:
-    - activate-ssh-key@4:
-        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
-    - git-clone@4: {}
-    - file-downloader@1:
-        inputs:
-        - destination: "$BITRISE_SOURCE_DIR/app/release.keystore"
-        - source: "$BITRISEIO_ANDROID_KEYSTORE_URL"
-        title: Download Release KeyStore
-    - file-downloader@1:
-        inputs:
-        - destination: "$BITRISE_SOURCE_DIR/app/release.properties"
-        - source: "$BITRISEIO_RELEASE_PROPERTIES_URL"
-        title: Download Release Properties
-    - file-downloader@1:
-        inputs:
-        - destination: "$BITRISE_SOURCE_DIR/app/shared.properties"
-        - source: "$BITRISEIO_SHARED_PROPERTIES_URL"
-        title: Download Shared Properties
-    - install-missing-android-tools@2:
-        inputs:
-        - gradlew_path: "$BITRISE_SOURCE_DIR/gradlew"
-    - android-build@0:
-        inputs:
-        - variant: release
-        - module: app
-    - deploy-to-bitrise-io@1:
-        inputs:
-        - notify_user_groups: none
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@6.0: {}
+      - file-downloader@1:
+          inputs:
+            - destination: "$BITRISE_SOURCE_DIR/app/release.keystore"
+            - source: "$BITRISEIO_ANDROID_KEYSTORE_URL"
+          title: Download Release KeyStore
+      - file-downloader@1:
+          inputs:
+            - destination: "$BITRISE_SOURCE_DIR/app/release.properties"
+            - source: "$BITRISEIO_RELEASE_PROPERTIES_URL"
+          title: Download Release Properties
+      - file-downloader@1:
+          inputs:
+            - destination: "$BITRISE_SOURCE_DIR/app/shared.properties"
+            - source: "$BITRISEIO_SHARED_PROPERTIES_URL"
+          title: Download Shared Properties
+      - install-missing-android-tools@2:
+          inputs:
+            - gradlew_path: "$BITRISE_SOURCE_DIR/gradlew"
+      - android-build@0:
+          inputs:
+            - variant: release
+            - module: app
+      - deploy-to-bitrise-io@1:
+          inputs:
+            - notify_user_groups: none
