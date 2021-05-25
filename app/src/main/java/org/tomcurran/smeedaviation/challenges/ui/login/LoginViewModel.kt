@@ -26,7 +26,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val STRAVA_PACKAGE_NAME = "com.strava"
-        private const val CLIENT_ID = "49167"
+        private const val CLIENT_ID = "66591"
         private const val SCOPE = "activity:read_all"
         private const val AUTH_ENDPOINT = "https://www.strava.com/oauth/mobile/authorize"
         private const val TOKEN_ENDPOINT = "https://www.strava.com/api/v3/oauth/token"
