@@ -131,7 +131,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .filter { it.type == activityType }
             .mapNotNull { it.id }
 
-        val fastestOneMileInJune = getActivitiesDetails(activityIds).minBy {
+        val fastestOneMileInJune = getActivitiesDetails(activityIds).minByOrNull {
             it.bestEfforts?.firstOrNull { effort -> effort.name == effortName }?.movingTime
                 ?: Int.MAX_VALUE
         }
