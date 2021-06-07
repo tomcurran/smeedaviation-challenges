@@ -6,13 +6,13 @@ props.load(new FileInputStream(file("release.properties")))
 props.load(new FileInputStream(file("shared.properties")))
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion '30.0.3'
 
     defaultConfig {
         applicationId "org.tomcurran.smeedaviation.challenges"
         minSdkVersion 28
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName '0.1.0'
 
