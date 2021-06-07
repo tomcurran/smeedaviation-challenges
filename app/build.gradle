@@ -6,6 +6,8 @@ def props = new Properties()
 props.load(new FileInputStream(file("release.properties")))
 props.load(new FileInputStream(file("shared.properties")))
 
+def stravaPackageName = 'com.strava'
+
 android {
     compileSdkVersion 30
     buildToolsVersion '30.0.3'
@@ -18,9 +20,11 @@ android {
         versionName '0.1.0'
 
         buildConfigField "String", "STRAVA_API_CLIENT_SECRET", "\"${props.stravaApiClientSecret}\""
+        buildConfigField "String", "STRAVA_PACKAGE_NAME", "\"${stravaPackageName}\""
 
         manifestPlaceholders = [
-                'appAuthRedirectScheme': 'challenges.smeedaviation.tomcurran.org'
+                'appAuthRedirectScheme': 'challenges.smeedaviation.tomcurran.org',
+                'stravaPackageName': stravaPackageName
         ]
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

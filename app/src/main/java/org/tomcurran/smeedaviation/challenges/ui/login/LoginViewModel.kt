@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import net.openid.appauth.*
 import net.openid.appauth.connectivity.DefaultConnectionBuilder
 import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_API_CLIENT_SECRET
+import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_PACKAGE_NAME
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.util.AuthStateManager
 import org.tomcurran.smeedaviation.challenges.util.Event
@@ -25,7 +26,6 @@ import kotlin.coroutines.suspendCoroutine
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
-        private const val STRAVA_PACKAGE_NAME = "com.strava"
         private const val CLIENT_ID = "66591"
         private const val SCOPE = "activity:read_all"
         private const val AUTH_ENDPOINT = "https://www.strava.com/oauth/mobile/authorize"
