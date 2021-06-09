@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import androidx.activity.result.ActivityResult
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
@@ -14,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.openid.appauth.*
-import net.openid.appauth.connectivity.DefaultConnectionBuilder
 import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_API_CLIENT_SECRET
 import org.tomcurran.smeedaviation.challenges.BuildConfig.STRAVA_PACKAGE_NAME
 import org.tomcurran.smeedaviation.challenges.R
@@ -31,20 +31,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         private const val AUTH_ENDPOINT = "https://www.strava.com/oauth/mobile/authorize"
         private const val TOKEN_ENDPOINT = "https://www.strava.com/api/v3/oauth/token"
         private const val REDIRECT_URI = "challenges.smeedaviation.tomcurran.org://auth"
-
-        private const val AUTH_REQUEST_CODE = 0
     }
-
-    data class StartActivityForResult(
-        val intent: Intent,
-        val requestCode: Int
-    )
 
     private val _authStateManager = AuthStateManager.getInstance(getApplication())
     private var _authService = AuthorizationService(getApplication())
 
-    private val _startActivityForResult = MutableLiveData<Event<StartActivityForResult>>()
-    val startActivityForResult: LiveData<Event<StartActivityForResult>> = _startActivityForResult
+    private val _startActivityForResult = MutableLiveData<Event<Intent>>()
+    val startActivityForResult: LiveData<Event<Intent>> = _startActivityForResult
 
     private val _navigateToMain = MutableLiveData<Event<Unit>>()
     val navigateToMain: LiveData<Event<Unit>> = _navigateToMain
@@ -95,35 +88,33 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             withContext(Dispatchers.Main) {
-                _startActivityForResult.value =
-                    Event(StartActivityForResult(authRequestIntent, AUTH_REQUEST_CODE))
+                _startActivityForResult.value = Event(authRequestIntent)
             }
         }
     }
 
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    fun onActivityResult(activityResult: ActivityResult) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (requestCode == AUTH_REQUEST_CODE) {
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    val response = AuthorizationResponse.fromIntent(data)
-                    val ex = AuthorizationException.fromIntent(data)
+            val data = activityResult.data
+            if (activityResult.resultCode == Activity.RESULT_OK && data != null) {
+                val response = AuthorizationResponse.fromIntent(data)
+                val ex = AuthorizationException.fromIntent(data)
 
-                    if (response != null || ex != null) {
-                        _authStateManager.updateAfterAuthorization(response, ex)
-                        if (response != null) {
-                            val tokenRequest =
-                                response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET))
-                            val (tokenResponse, tokenEx) = suspendCoroutine<Pair<TokenResponse?, AuthorizationException?>> { continuation ->
-                                _authService.performTokenRequest(
-                                    tokenRequest, _authStateManager.current.clientAuthentication
-                                ) { tokenResponse, tokenEx ->
-                                    continuation?.resume(Pair(tokenResponse, tokenEx))
-                                }
+                if (response != null || ex != null) {
+                    _authStateManager.updateAfterAuthorization(response, ex)
+                    if (response != null) {
+                        val tokenRequest =
+                            response.createTokenExchangeRequest(mapOf("client_secret" to STRAVA_API_CLIENT_SECRET))
+                        val (tokenResponse, tokenEx) = suspendCoroutine<Pair<TokenResponse?, AuthorizationException?>> { continuation ->
+                            _authService.performTokenRequest(
+                                tokenRequest, _authStateManager.current.clientAuthentication
+                            ) { tokenResponse, tokenEx ->
+                                continuation?.resume(Pair(tokenResponse, tokenEx))
                             }
-                            _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
-                            withContext(Dispatchers.Main) {
-                                _navigateToMain.value = Event(Unit)
-                            }
+                        }
+                        _authStateManager.updateAfterTokenResponse(tokenResponse, tokenEx)
+                        withContext(Dispatchers.Main) {
+                            _navigateToMain.value = Event(Unit)
                         }
                     }
                 }

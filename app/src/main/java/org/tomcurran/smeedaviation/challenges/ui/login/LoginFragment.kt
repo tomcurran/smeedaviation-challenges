@@ -1,21 +1,25 @@
 package org.tomcurran.smeedaviation.challenges.ui.login
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.LoginFragmentBinding
 import org.tomcurran.smeedaviation.challenges.util.EventObserver
-import java.lang.Exception
 
 class LoginFragment : Fragment() {
 
     private val viewModel: LoginViewModel by viewModels()
+
+    private val startActivityForResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()) { activityResult ->
+            viewModel.onActivityResult(activityResult)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,9 +30,9 @@ class LoginFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
 
-        viewModel.startActivityForResult.observe(viewLifecycleOwner, EventObserver {
+        viewModel.startActivityForResult.observe(viewLifecycleOwner, EventObserver { intent ->
             try {
-                startActivityForResult(it.intent, it.requestCode)
+                startActivityForResult.launch(intent)
             } catch (e: Exception) {
                 // intentionally left blank - onActivityResult will handle the failure
             }
@@ -39,10 +43,5 @@ class LoginFragment : Fragment() {
         })
 
         return binding.root
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        viewModel.onActivityResult(requestCode, resultCode, data)
     }
 }
