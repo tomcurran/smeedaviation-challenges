@@ -127,10 +127,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
+            }
 
-                withContext(Dispatchers.Main) {
-                    _loggingIn.value = false
-                }
+            withContext(Dispatchers.Main) {
+                _loggingIn.value = false
             }
         }
     }
