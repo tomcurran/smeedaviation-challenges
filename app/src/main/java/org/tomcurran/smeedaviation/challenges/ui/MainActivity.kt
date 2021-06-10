@@ -1,8 +1,9 @@
-package org.tomcurran.smeedaviation.challenges
+package org.tomcurran.smeedaviation.challenges.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import org.tomcurran.smeedaviation.challenges.R
 import org.tomcurran.smeedaviation.challenges.databinding.MainActivityBinding
 
 class MainActivity : AppCompatActivity() {
